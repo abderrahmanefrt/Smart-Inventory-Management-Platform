@@ -16,15 +16,35 @@ export const getProducts = async (req: Request, res: Response) => {
 
 
 const search = String(req.query.search || "").trim();
+const minPrice = req.query.minPrice ? Number(req.query.minPrice) :undefined;
+const maxPrice =req.query.maxPrice ? Number(req.query.maxPrice) : undefined;
 
-   const whereondition =search?{
+const priceCondition: any = {};
+if (minPrice !== undefined) {
+  priceCondition[Op.gte] = minPrice;
+}
+
+if (maxPrice !== undefined) {
+  priceCondition[Op.lte] = maxPrice;
+}
+
+
+  const whereCondition = {
+  ...(search && {
     name: {
-      [Op.iLike]: `%${search}%`,
-    }
-  }: {};
+      [Op.like]: `%${search}%`,
+    },
+  }),
+
+  ...(minPrice !== undefined || maxPrice !== undefined
+    ? {
+        price: priceCondition,
+      }
+    : {}),
+};
 
    const products = await Product.findAll({
-     where: whereondition,
+     where: whereCondition,
      limit,
      offset,
      order:[['id', 'DESC']]

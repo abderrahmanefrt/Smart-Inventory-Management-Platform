@@ -31,3 +31,10 @@ DELETE http://localhost:3000/api/products/1
 
 ### Get first page
 GET http://localhost:3000/api/products?page=1&limit=10
+
+
+### Search Samsung
+GET http://localhost:3000/api/products?search=samsung
+
+### Search iPhone
+GET http://localhost:3000/api/products?search=iphone
