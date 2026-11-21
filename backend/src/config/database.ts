@@ -22,4 +22,5 @@ export const sequelize = databaseUrl
       }
     );
 
+    
 export default sequelize;

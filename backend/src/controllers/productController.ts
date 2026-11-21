@@ -1,5 +1,6 @@
 
 import { Request, Response } from "express";
+import { Op } from "sequelize";
 import {
   Product,
   createProductSchema,
@@ -9,12 +10,40 @@ import {
 // GET /api/products
 export const getProducts = async (req: Request, res: Response) => {
   try {
-    const products = await Product.findAll();
+   const page= Math.max(1, Number(req.query.page) || 1);
+   const limit= Math.max(1, Number(req.query.limit) || 10);
+   const offset = (page - 1) * limit;
+
+
+const search = String(req.query.search || "").trim();
+
+   const whereondition =search?{
+    name: {
+      [Op.iLike]: `%${search}%`,
+    }
+  }: {};
+
+   const products = await Product.findAll({
+     where: whereondition,
+     limit,
+     offset,
+     order:[['id', 'DESC']]
+   });
+
+
+ const count = await Product.count();
 
     return res.status(200).json({
       success: true,
       message: "List of products",
       data: products,
+
+      pagination: {
+        totalProducts: count,
+        totalPages: Math.ceil(count / limit),
+        currentPage: page,
+        limit,
+      },
     });
   } catch (error) {
     console.error("getProducts error:", error);

@@ -27,3 +27,7 @@ Content-Type: application/json
 
 ### Delete product
 DELETE http://localhost:3000/api/products/1
+
+
+### Get first page
+GET http://localhost:3000/api/products?page=1&limit=10
