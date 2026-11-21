@@ -1,7 +1,10 @@
 import { Request, Response } from "express";
 import { createProductSchema } from "../models/productModel";
 import { success } from "zod";
-let products: any[] = [];
+import { Product } from "../models/productModel";
+
+
+let products: Product[] = [];
 
 export const getProducts = (req:Request, res:Response) => {
   res.status(200).json({

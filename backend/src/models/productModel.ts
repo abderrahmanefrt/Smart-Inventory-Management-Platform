@@ -8,3 +8,11 @@ export const createProductSchema = z.object({
 
   quantity: z.number().int().min(0, "Quantity cannot be negative"),
 });
+
+
+export type Product = {
+  id: number;
+  name: string;
+  price: number;
+  quantity: number;
+};
