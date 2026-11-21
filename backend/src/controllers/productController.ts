@@ -66,5 +66,41 @@ const newProduct = {
 }
 
 
+export const updateProduct =(req:Request, res:Response) =>{
+  const id=Number(req.params.id);
+  const productIndex= products.findIndex((p)=>p.id===id);
 
+  if(productIndex===-1){
+    return res.status(404).json({
+      success: false,
+      message: "Product not found",
+      data: null
+    });
+  }
+
+  const result = createProductSchema.safeParse(req.body);
+  if (!result.success) {
+    return res.status(400).json({
+      success: false,
+      errors: result.error.issues.map((issue) => ({
+        field: issue.path.join("."),
+        message: issue.message,
+      })),
+    });
+  }
+
+  const { name, price, quantity } = result.data;
+  products[productIndex] = {
+    id,
+    name,
+    price,
+    quantity,
+  };
+
+  res.status(200).json({
+    data: products[productIndex],
+    success: true,
+    message: "Product updated successfully"
+  });
+}
 

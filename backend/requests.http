@@ -15,3 +15,13 @@ Content-Type: application/json
 ### Get product by ID
 GET http://localhost:3000/api/products/1
 
+### Update product
+PUT http://localhost:3000/api/products/1
+Content-Type: application/json
+
+{
+  "name": "Samsung Galaxy S25 Ultra",
+  "price": 1100,
+  "quantity": 15
+}
+
