@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { createProductSchema } from "../models/productModel";
+import { success } from "zod";
 let products: any[] = [];
 
 export const getProducts = (req:Request, res:Response) => {
@@ -9,6 +10,29 @@ export const getProducts = (req:Request, res:Response) => {
     message: "List of products"
   });
 }
+
+export const getProductsbyId= (req:Request, res:Response)=>{
+  const id=Number(req.params.id);
+
+  const product = products.find((p)=>p.id===id);
+  if(!product){
+    return res.status(404).json({
+      success: false,
+      message: "Product not found",
+      data: null
+    });
+  }
+
+    return res.status(200).json({
+      success: true,
+      message: "Product found",
+      data: product
+    })
+  }
+
+
+
+
 
 export const CreateProducts =(req:Request, res:Response) =>{
 
@@ -32,7 +56,7 @@ const newProduct = {
   };
 
   products.push(newProduct);
-  
+
   res.status(201).json({
     data: newProduct,
     success: true,
@@ -40,4 +64,7 @@ const newProduct = {
   })
 
 }
+
+
+
 

@@ -7,8 +7,11 @@ POST http://localhost:3000/api/products
 Content-Type: application/json
 
 {
-  "name": "Samsung Galaxy S25",
-  "price": 899,
-  "quantity": 10
+  "name": "iPhone 17",
+  "price": 1200,
+  "quantity": 5
 }
+
+### Get product by ID
+GET http://localhost:3000/api/products/1
 
