@@ -1,5 +1,6 @@
 
 import express, { Application } from "express";
+import routes from "./routes"
 
 const app: Application = express();
 
@@ -7,11 +8,7 @@ const app: Application = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Test route
-app.get("/", (req, res) => {
-  res.status(200).json({
-    message: "Smart Inventory API is running!",
-  });
-});
+// Routes
+app.use("/", routes);
 
 export default app;
