@@ -1,130 +1,206 @@
+
 import { Request, Response } from "express";
-import { createProductSchema } from "../models/productModel";
-import { success } from "zod";
-import { Product } from "../models/productModel";
+import {
+  Product,
+  createProductSchema,
+  updateProductSchema,
+} from "../models/productModel";
 
+// GET /api/products
+export const getProducts = async (req: Request, res: Response) => {
+  try {
+    const products = await Product.findAll();
 
-let products: Product[] = [];
+    return res.status(200).json({
+      success: true,
+      message: "List of products",
+      data: products,
+    });
+  } catch (error) {
+    console.error("getProducts error:", error);
 
-export const getProducts = (req:Request, res:Response) => {
-  res.status(200).json({
-    data: products,
-    success: true,
-    message: "List of products"
-  });
-}
-
-export const getProductsbyId= (req:Request, res:Response)=>{
-  const id=Number(req.params.id);
-
-  const product = products.find((p)=>p.id===id);
-  if(!product){
-    return res.status(404).json({
+    return res.status(500).json({
       success: false,
-      message: "Product not found",
-      data: null
+      message: "Failed to retrieve products",
+      data: null,
     });
   }
+};
+
+// GET /api/products/:id
+export const getProductsbyId = async (req: Request, res: Response) => {
+  try {
+    const id = Number(req.params.id);
+
+    if (!Number.isInteger(id) || id <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid product ID",
+        data: null,
+      });
+    }
+
+    const product = await Product.findByPk(id);
+
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found",
+        data: null,
+      });
+    }
 
     return res.status(200).json({
       success: true,
       message: "Product found",
-      data: product
-    })
-  }
+      data: product,
+    });
+  } catch (error) {
+    console.error("getProductsbyId error:", error);
 
-
-
-
-
-export const CreateProducts =(req:Request, res:Response) =>{
-
-  const result = createProductSchema.safeParse(req.body);
-
-if (!result.success) {
-    return res.status(400).json({
+    return res.status(500).json({
       success: false,
-      errors: result.error.issues.map((issue) => ({
-        field: issue.path.join("."),
-        message: issue.message,
-      })),
+      message: "Failed to retrieve product",
+      data: null,
     });
   }
-  const { name, price, quantity } = result.data;
-const newProduct = {
-    id: products.length + 1,
-    name,
-    price,
-    quantity,
-  };
+};
 
-  products.push(newProduct);
+// POST /api/products
+export const CreateProducts = async (req: Request, res: Response) => {
+  try {
+    const result = createProductSchema.safeParse(req.body);
 
-  res.status(201).json({
-    data: newProduct,
-    success: true,
-    message:" Product created successfully"
-  })
+    if (!result.success) {
+      return res.status(400).json({
+        success: false,
+        message: "Validation failed",
+        errors: result.error.issues.map((issue) => ({
+          field: issue.path.join("."),
+          message: issue.message,
+        })),
+        data: null,
+      });
+    }
 
-}
+    const newProduct = await Product.create(result.data);
 
+    return res.status(201).json({
+      success: true,
+      message: "Product created successfully",
+      data: newProduct,
+    });
+  } catch (error) {
+    console.error("CreateProducts error:", error);
 
-export const updateProduct =(req:Request, res:Response) =>{
-  const id=Number(req.params.id);
-  const productIndex= products.findIndex((p)=>p.id===id);
-
-  if(productIndex===-1){
-    return res.status(404).json({
+    return res.status(500).json({
       success: false,
-      message: "Product not found",
-      data: null
+      message: "Failed to create product",
+      data: null,
     });
   }
+};
 
-  const result = createProductSchema.safeParse(req.body);
-  if (!result.success) {
-    return res.status(400).json({
-      success: false,
-      errors: result.error.issues.map((issue) => ({
-        field: issue.path.join("."),
-        message: issue.message,
-      })),
-    });
-  }
+// PUT /api/products/:id
+export const updateProduct = async (req: Request, res: Response) => {
+  try {
+    const id = Number(req.params.id);
 
-  const { name, price, quantity } = result.data;
-  products[productIndex] = {
-    id,
-    name,
-    price,
-    quantity,
-  };
+    if (!Number.isInteger(id) || id <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid product ID",
+        data: null,
+      });
+    }
 
-  res.status(200).json({
-    data: products[productIndex],
-    success: true,
-    message: "Product updated successfully"
-  });
-}
+    const product = await Product.findByPk(id);
 
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found",
+        data: null,
+      });
+    }
 
-export const deleteProduct =(req:Request, res: Response)=>{
-   const id=Number(req.params.id);
-   const productIndex= products.findIndex((p)=>p.id===id);
+    const result = updateProductSchema.safeParse(req.body);
 
-   if(productIndex===-1){
-    return res.status(404).json({
-      success:false,
-      message:"Product not found",
-      data:null
-    })
-   }
+    if (!result.success) {
+      return res.status(400).json({
+        success: false,
+        message: "Validation failed",
+        errors: result.error.issues.map((issue) => ({
+          field: issue.path.join("."),
+          message: issue.message,
+        })),
+        data: null,
+      });
+    }
 
-   const deletedProduct= products.splice(productIndex,1);
+    if (Object.keys(result.data).length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "At least one field is required for update",
+        data: null,
+      });
+    }
+
+    await product.update(result.data);
 
     return res.status(200).json({
-    success: true,
-    message: "Product deleted successfully",
-    data: deletedProduct[0],
-  });
-}
+      success: true,
+      message: "Product updated successfully",
+      data: product,
+    });
+  } catch (error) {
+    console.error("updateProduct error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to update product",
+      data: null,
+    });
+  }
+};
+
+// DELETE /api/products/:id
+export const deleteProduct = async (req: Request, res: Response) => {
+  try {
+    const id = Number(req.params.id);
+
+    if (!Number.isInteger(id) || id <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid product ID",
+        data: null,
+      });
+    }
+
+    const product = await Product.findByPk(id);
+
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found",
+        data: null,
+      });
+    }
+
+    await product.destroy();
+
+    return res.status(200).json({
+      success: true,
+      message: "Product deleted successfully",
+      data: product,
+    });
+  } catch (error) {
+    console.error("deleteProduct error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to delete product",
+      data: null,
+    });
+  }
+};
