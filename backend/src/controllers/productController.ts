@@ -19,6 +19,20 @@ const search = String(req.query.search || "").trim();
 const minPrice = req.query.minPrice ? Number(req.query.minPrice) :undefined;
 const maxPrice =req.query.maxPrice ? Number(req.query.maxPrice) : undefined;
 
+const sortBy = String(req.query.sortBy || "createdAt");
+const order = String(req.query.order || "DESC").toUpperCase();
+
+
+const allowedSortFields = ["name", "price", "quantity", "createdAt"];
+
+const validSortBy = allowedSortFields.includes(sortBy)
+  ? sortBy
+  : "createdAt";
+
+const validOrder = order === "ASC" ? "ASC" : "DESC";
+
+
+
 const priceCondition: any = {};
 if (minPrice !== undefined) {
   priceCondition[Op.gte] = minPrice;
@@ -47,7 +61,7 @@ if (maxPrice !== undefined) {
      where: whereCondition,
      limit,
      offset,
-     order:[['id', 'DESC']]
+    order: [[validSortBy, validOrder]],
    });
 
 
