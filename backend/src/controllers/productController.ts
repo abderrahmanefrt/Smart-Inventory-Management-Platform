@@ -8,90 +8,134 @@ import {
 } from "../models/productModel";
 
 // GET /api/products
+
 export const getProducts = async (req: Request, res: Response) => {
   try {
-   const page= Math.max(1, Number(req.query.page) || 1);
-   const limit= Math.max(1, Number(req.query.limit) || 10);
-   const offset = (page - 1) * limit;
+    // 1. Pagination
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 10));
+    const offset = (page - 1) * limit;
 
+    // 2. Search and filters
+    const search = String(req.query.search || "").trim();
 
-const search = String(req.query.search || "").trim();
-const minPrice = req.query.minPrice ? Number(req.query.minPrice) :undefined;
-const maxPrice =req.query.maxPrice ? Number(req.query.maxPrice) : undefined;
+    const minPrice =
+      req.query.minPrice !== undefined
+        ? Number(req.query.minPrice)
+        : undefined;
 
-const sortBy = String(req.query.sortBy || "createdAt");
-const order = String(req.query.order || "DESC").toUpperCase();
+    const maxPrice =
+      req.query.maxPrice !== undefined
+        ? Number(req.query.maxPrice)
+        : undefined;
 
+    const minQuantity =
+      req.query.minQuantity !== undefined
+        ? Number(req.query.minQuantity)
+        : undefined;
 
-const allowedSortFields = ["name", "price", "quantity", "createdAt"];
+    const maxQuantity =
+      req.query.maxQuantity !== undefined
+        ? Number(req.query.maxQuantity)
+        : undefined;
 
-const validSortBy = allowedSortFields.includes(sortBy)
-  ? sortBy
-  : "createdAt";
+    // 3. Validate numeric filters
+    if (
+      [minPrice, maxPrice].some(
+        (value) =>
+          value !== undefined &&
+          (!Number.isFinite(value) || value < 0)
+      ) ||
+      [minQuantity, maxQuantity].some(
+        (value) =>
+          value !== undefined &&
+          (!Number.isInteger(value) || value < 0)
+      )
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid price or quantity filter",
+      });
+    }
 
-const validOrder = order === "ASC" ? "ASC" : "DESC";
+    // 4. Validate minimum and maximum values
+    if (
+      (minPrice !== undefined &&
+        maxPrice !== undefined &&
+        minPrice > maxPrice) ||
+      (minQuantity !== undefined &&
+        maxQuantity !== undefined &&
+        minQuantity > maxQuantity)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Minimum value cannot be greater than maximum value",
+      });
+    }
 
+    // 5. Sorting
+    const sortBy = String(req.query.sortBy || "createdAt");
+    const order = String(req.query.order || "DESC").toUpperCase();
 
+    const allowedSortFields = [
+      "name",
+      "price",
+      "quantity",
+      "createdAt",
+    ];
 
-const priceCondition: any = {};
-if (minPrice !== undefined) {
-  priceCondition[Op.gte] = minPrice;
-}
+    const validSortBy = allowedSortFields.includes(sortBy)
+      ? sortBy
+      : "createdAt";
 
-if (maxPrice !== undefined) {
-  priceCondition[Op.lte] = maxPrice;
-}
+    const validOrder = order === "ASC" ? "ASC" : "DESC";
 
+    // 6. Build search and filter conditions
+    const whereCondition: any = {};
 
-  const whereCondition = {
-  ...(search && {
-    name: {
-      [Op.like]: `%${search}%`,
-    },
-  }),
+    if (search) {
+      whereCondition.name = {
+        [Op.like]: `%${search}%`,
+      };
+    }
 
-  ...(minPrice !== undefined || maxPrice !== undefined
-    ? {
-        price: priceCondition,
+    if (minPrice !== undefined || maxPrice !== undefined) {
+      whereCondition.price = {};
+
+      if (minPrice !== undefined) {
+        whereCondition.price[Op.gte] = minPrice;
       }
-    : {}),
-};
 
-   const products = await Product.findAll({
-     where: whereCondition,
-     limit,
-     offset,
-    order: [[validSortBy, validOrder]],
-   });
+      if (maxPrice !== undefined) {
+        whereCondition.price[Op.lte] = maxPrice;
+      }
+    }
 
+    if (minQuantity !== undefined || maxQuantity !== undefined) {
+      whereCondition.quantity = {};
 
+      if (minQuantity !== undefined) {
+        whereCondition.quantity[Op.gte] = minQuantity;
+      }
 
-   const minQuantity = req.query.minQuantity
-  ? Number(req.query.minQuantity)
-  : undefined;
+      if (maxQuantity !== undefined) {
+        whereCondition.quantity[Op.lte] = maxQuantity;
+      }
+    }
 
-const maxQuantity = req.query.maxQuantity
-  ? Number(req.query.maxQuantity)
-  : undefined;
+    // 7. Fetch products and count matching results
+    const { count, rows } = await Product.findAndCountAll({
+      where: whereCondition,
+      limit,
+      offset,
+      order: [[validSortBy, validOrder]],
+    });
 
-  const quantityCondition: any = {};
-
-if (minQuantity !== undefined) {
-  quantityCondition[Op.gte] = minQuantity;
-}
-
-if (maxQuantity !== undefined) {
-  quantityCondition[Op.lte] = maxQuantity;
-}
-
-
- const count = await Product.count();
-
+    // 8. Response
     return res.status(200).json({
       success: true,
-      message: "List of products",
-      data: products,
-
+      message: "Products retrieved successfully",
+      data: rows,
       pagination: {
         totalProducts: count,
         totalPages: Math.ceil(count / limit),
@@ -109,6 +153,7 @@ if (maxQuantity !== undefined) {
     });
   }
 };
+
 
 // GET /api/products/:id
 export const getProductsbyId = async (req: Request, res: Response) => {

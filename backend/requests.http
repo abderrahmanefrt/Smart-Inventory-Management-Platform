@@ -51,3 +51,21 @@ GET http://localhost:3000/api/products?sortBy=name&order=ASC
 
 ### Sort by quantity
 GET http://localhost:3000/api/products?sortBy=quantity&order=DESC
+
+### Sort by quantity
+
+GET http://localhost:3000/api/products?minQuantity=10&maxQuantity=50
+
+
+
+### Minimum quantity
+GET http://localhost:3000/api/products?minQuantity=10
+
+### Maximum quantity
+GET http://localhost:3000/api/products?maxQuantity=50
+
+### Quantity between 10 and 50
+GET http://localhost:3000/api/products?minQuantity=10&maxQuantity=50
+
+### Combine search, price and quantity
+GET http://localhost:3000/api/products?search=samsung&minPrice=100&maxPrice=500&minQuantity=10
