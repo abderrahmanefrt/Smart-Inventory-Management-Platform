@@ -65,6 +65,26 @@ if (maxPrice !== undefined) {
    });
 
 
+
+   const minQuantity = req.query.minQuantity
+  ? Number(req.query.minQuantity)
+  : undefined;
+
+const maxQuantity = req.query.maxQuantity
+  ? Number(req.query.maxQuantity)
+  : undefined;
+
+  const quantityCondition: any = {};
+
+if (minQuantity !== undefined) {
+  quantityCondition[Op.gte] = minQuantity;
+}
+
+if (maxQuantity !== undefined) {
+  quantityCondition[Op.lte] = maxQuantity;
+}
+
+
  const count = await Product.count();
 
     return res.status(200).json({

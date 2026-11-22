@@ -38,3 +38,16 @@ GET http://localhost:3000/api/products?search=samsung
 
 ### Search iPhone
 GET http://localhost:3000/api/products?search=iphone
+
+
+### Sort by price ascending
+GET http://localhost:3000/api/products?sortBy=price&order=ASC
+
+### Sort by price descending
+GET http://localhost:3000/api/products?sortBy=price&order=DESC
+
+### Sort by name
+GET http://localhost:3000/api/products?sortBy=name&order=ASC
+
+### Sort by quantity
+GET http://localhost:3000/api/products?sortBy=quantity&order=DESC
